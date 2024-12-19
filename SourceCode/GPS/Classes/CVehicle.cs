@@ -16,13 +16,15 @@ namespace AgOpenGPS
         public double antennaPivot;
         public double wheelbase;
         public double antennaOffset, panicStopSpeed;
-        public int vehicleType;
+        public int deadZoneHeading, deadZoneDelay;
+        public int vehicleType, deadZoneDelayCounter;
+        public bool isInDeadZone;
 
         //min vehicle speed allowed before turning shit off
         public double slowSpeedCutoff = 0;
 
         //autosteer values
-        public double goalPointLookAhead, goalPointLookAheadHold, goalPointLookAheadMult, uturnCompensation;
+        public double goalPointLookAheadHold, goalPointLookAheadMult, uturnCompensation;
 
         public double stanleyDistanceErrorGain, stanleyHeadingErrorGain;
         public double minLookAheadDistance = 2.0;
@@ -61,8 +63,8 @@ namespace AgOpenGPS
 
             slowSpeedCutoff = Properties.Settings.Default.setVehicle_slowSpeedCutoff;
 
-            goalPointLookAhead = Properties.Settings.Default.setVehicle_goalPointLookAhead;
             goalPointLookAheadHold = Properties.Settings.Default.setVehicle_goalPointLookAheadHold;
+
             goalPointLookAheadMult = Properties.Settings.Default.setVehicle_goalPointLookAheadMult;
 
             stanleyDistanceErrorGain = Properties.Settings.Default.stanleyDistanceErrorGain;
@@ -83,14 +85,17 @@ namespace AgOpenGPS
 
             hydLiftLookAheadTime = Properties.Settings.Default.setVehicle_hydraulicLiftLookAhead;
             panicStopSpeed = Properties.Settings.Default.setVehicle_panicStopSpeed;
+            //deadZoneDistance = Properties.Settings.Default.setAS_deadZoneDistance;
+            deadZoneHeading = Properties.Settings.Default.setAS_deadZoneHeading;
+            deadZoneDelay = Properties.Settings.Default.setAS_deadZoneDelay;
 
             isInFreeDriveMode = false;
 
             //how far from line before it becomes Hold
-            modeXTE = Properties.Settings.Default.setAS_ModeXTE;
+            modeXTE = 0.2;
 
             //how long before hold is activated
-            modeTime = Properties.Settings.Default.setAS_ModeTime;
+            modeTime = 1;
 
             functionSpeedLimit = Properties.Settings.Default.setAS_functionSpeedLimit;
             maxSteerSpeed = Properties.Settings.Default.setAS_maxSteerSpeed;
@@ -105,29 +110,55 @@ namespace AgOpenGPS
         public double UpdateGoalPointDistance()
         {
             double xTE = Math.Abs(modeActualXTE);
+            double goalPointDistance = mf.avgSpeed * 0.07; //0.05 * 1.4
 
-            //how far should goal point be away  - speed * seconds * kmph -> m/s then limit min value
-            double goalPointDistance = mf.avgSpeed * goalPointLookAhead * 0.05 * goalPointLookAheadMult;
-            goalPointDistance += goalPointLookAhead;
+            double LoekiAhead = goalPointLookAheadHold;
+            if (!mf.isBtnAutoSteerOn) LoekiAhead = 5;
 
-            if (xTE < (modeXTE))
+            if (xTE <= 0.1)
             {
-                if (modeTimeCounter > modeTime * 10)
-                {
-                    goalPointDistance = mf.avgSpeed * goalPointLookAheadHold * 0.05 * goalPointLookAheadMult;
-                    goalPointDistance += goalPointLookAheadHold;
-                }
-                else
-                {
-                    modeTimeCounter++;
-                }
+                goalPointDistance *= LoekiAhead; 
+                goalPointDistance += LoekiAhead;
+            }
+
+            else if (xTE > 0.1 && xTE < 0.4)
+            {
+                xTE -= 0.1;
+                double ramp = 1- (xTE/1.2);
+                goalPointDistance *= LoekiAhead * ramp; 
+                goalPointDistance += LoekiAhead * ramp;
+
             }
             else
             {
-                modeTimeCounter = 0;
+                goalPointDistance *= LoekiAhead * 0.75; 
+                goalPointDistance += LoekiAhead * 0.75;
             }
 
-            if (goalPointDistance < 1) goalPointDistance = 1;
+            ////how far should goal point be away  - speed * seconds * kmph -> m/s then limit min value
+            ////double goalPointDistance = mf.avgSpeed * goalPointLookAhead * 0.05 * goalPointLookAheadMult;
+            //double goalPointDistance = mf.avgSpeed * goalPointLookAhead * 0.07; //0.05 * 1.4
+            //goalPointDistance += goalPointLookAhead;
+
+            //if (xTE < (modeXTE))
+            //{
+            //    if (modeTimeCounter > modeTime * 10)
+            //    {
+            //        //goalPointDistance = mf.avgSpeed * goalPointLookAheadHold * 0.05 * goalPointLookAheadMult;
+            //        goalPointDistance = mf.avgSpeed * goalPointLookAheadHold * 0.07; //0.05 * 1.4
+            //        goalPointDistance += goalPointLookAheadHold;
+            //    }
+            //    else
+            //    {
+            //        modeTimeCounter++;
+            //    }
+            //}
+            //else
+            //{
+            //    modeTimeCounter = 0;
+            //}
+
+            if (goalPointDistance < 2) goalPointDistance = 2;
             goalDistance = goalPointDistance;
 
             return goalPointDistance;
@@ -428,21 +459,21 @@ namespace AgOpenGPS
                 GL.End();
             }
 
-            if (mf.camera.camSetDistance > -75 && mf.isFirstHeadingSet)
-            {
-                //draw the bright antenna dot
-                GL.PointSize(16);
-                GL.Begin(PrimitiveType.Points);
-                GL.Color3(0, 0, 0);
-                GL.Vertex3(-antennaOffset, antennaPivot, 0.1);
-                GL.End();
+            //if (mf.camera.camSetDistance > -75 && mf.isFirstHeadingSet)
+            //{
+            //    //draw the bright antenna dot
+            //    GL.PointSize(16);
+            //    GL.Begin(PrimitiveType.Points);
+            //    GL.Color3(0, 0, 0);
+            //    GL.Vertex3(-antennaOffset, antennaPivot, 0.1);
+            //    GL.End();
 
-                GL.PointSize(10);
-                GL.Begin(PrimitiveType.Points);
-                GL.Color3(0.20, 0.98, 0.98);
-                GL.Vertex3(-antennaOffset, antennaPivot, 0.1);
-                GL.End();
-            }
+            //    GL.PointSize(10);
+            //    GL.Begin(PrimitiveType.Points);
+            //    GL.Color3(0.20, 0.98, 0.98);
+            //    GL.Vertex3(-antennaOffset, antennaPivot, 0.1);
+            //    GL.End();
+            //}
 
             if (mf.bnd.isBndBeingMade)
             {
@@ -493,34 +524,6 @@ namespace AgOpenGPS
                 GL.End();
             }
 
-            if (mf.trk.idx > -1 && !mf.ct.isContourBtnOn)
-            {
-                string offs = "";
-                if (mf.trk.gArr[mf.trk.idx].nudgeDistance !=0)
-                    offs = ((int)(mf.trk.gArr[mf.trk.idx].nudgeDistance*mf.m2InchOrCm)).ToString() + mf.unitsInCmNS;
-                string dire;
-
-                if (mf.trk.gArr[mf.trk.idx].mode == (int)TrackMode.AB )
-                {
-                    if (mf.ABLine.isHeadingSameWay) dire = "{";
-                    else dire = "}";
-                    GL.Color4(1.26, 1.25, 1.2510, 0.87);
-
-                    if (mf.ABLine.howManyPathsAway > 0)
-                        mf.font.DrawTextVehicle(2, wheelbase + 1,dire + mf.ABLine.howManyPathsAway.ToString() + "R " + offs, 1);
-                    else
-                        mf.font.DrawTextVehicle(2, wheelbase + 1, dire + (-mf.ABLine.howManyPathsAway).ToString() + "L " + offs, 1);
-                }
-                else
-                {
-                    if (mf.curve.isHeadingSameWay) dire = "{";
-                    else dire = "}";
-
-                    GL.Color4(1.269, 1.25, 1.2510, 0.87);
-                    if (mf.curve.howManyPathsAway > 0) mf.font.DrawTextVehicle(2, wheelbase + 1, dire + mf.curve.howManyPathsAway.ToString() + "R " + offs, 1);
-                    else mf.font.DrawTextVehicle(2, wheelbase + 1, dire + (-mf.curve.howManyPathsAway).ToString() + "L " + offs, 1);
-                }
-            }
             GL.LineWidth(1);
 
             //if (mf.camera.camSetDistance < -500)

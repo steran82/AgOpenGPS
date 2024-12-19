@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AgOpenGPS.Culture;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -85,10 +86,6 @@ namespace AgOpenGPS
 
             hsbarSideHillComp.Value = (int)(Properties.Settings.Default.setAS_sideHillComp * 100);
             mf.gyd.sideHillCompFactor = Properties.Settings.Default.setAS_sideHillComp;
-
-            mf.vehicle.goalPointLookAhead = Properties.Settings.Default.setVehicle_goalPointLookAhead;
-            hsbarLookAhead.Value = (Int16)(mf.vehicle.goalPointLookAhead * 10);
-            lblLookAhead.Text = mf.vehicle.goalPointLookAhead.ToString();
 
             mf.vehicle.goalPointLookAheadMult = Properties.Settings.Default.setVehicle_goalPointLookAheadMult;
             hsbarLookAheadMult.Value = (Int16)(mf.vehicle.goalPointLookAheadMult * 10);
@@ -228,7 +225,6 @@ namespace AgOpenGPS
             Properties.Settings.Default.stanleyIntegralGainAB = mf.vehicle.stanleyIntegralGainAB;
 
             Properties.Settings.Default.purePursuitIntegralGainAB = mf.vehicle.purePursuitIntegralGain;
-            Properties.Settings.Default.setVehicle_goalPointLookAhead = mf.vehicle.goalPointLookAhead;
             Properties.Settings.Default.setVehicle_goalPointLookAheadMult = mf.vehicle.goalPointLookAheadMult;
 
             Properties.Settings.Default.setVehicle_maxSteerAngle = mf.vehicle.maxSteerAngle;
@@ -1083,12 +1079,12 @@ namespace AgOpenGPS
             mf.gyd.sideHillCompFactor = deg;
         }
 
-        private void hsbarLookAhead_ValueChanged(object sender, EventArgs e)
-        {
-            mf.vehicle.goalPointLookAhead = hsbarLookAhead.Value * 0.1;
-            lblLookAhead.Text = mf.vehicle.goalPointLookAhead.ToString();
-            //mf.AutoSteerSettingsOutToPort();
-        }
+        //private void hsbarLookAhead_ValueChanged(object sender, EventArgs e)
+        //{
+        //    mf.vehicle.goalPointLookAhead = hsbarLookAhead.Value * 0.1;
+        //    lblLookAhead.Text = mf.vehicle.goalPointLookAhead.ToString();
+        //    //mf.AutoSteerSettingsOutToPort();
+        //}
 
         private void btnOkSetMaximumSteerAngle_Click(object sender, EventArgs e)
         {

@@ -1,5 +1,6 @@
 ﻿//Please, if you use this, share the improvements
 
+using AgOpenGPS.Culture;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -89,6 +90,8 @@ namespace AgOpenGPS
             nudOffset.Controls[0].Enabled = false;
 
             nudTrailingToolToPivotLength.Controls[0].Enabled = false;
+
+            nudFixJumpDistance.Controls[0].Enabled = false;
         }
 
         private void FormConfig_Load(object sender, EventArgs e)
@@ -257,12 +260,14 @@ namespace AgOpenGPS
             chkDisplayExtraGuides.Checked = mf.isSideGuideLines;
             chkDisplayLogNMEA.Checked = mf.isLogNMEA;
             chkDisplayPolygons.Checked = mf.isDrawPolygons;
-            chkDisplayLightbar.Checked = mf.isLightbarOn;
             chkDisplayKeyboard.Checked = mf.isKeyboardOn;
             chkDisplayLogElevation.Checked = mf.isLogElevation;
+            chkDirectionMarkers.Checked = Properties.Settings.Default.setTool_isDirectionMarkers;
 
             if (mf.isMetric) rbtnDisplayMetric.Checked = true;
             else rbtnDisplayImperial.Checked = true;
+
+            nudNumGuideLines.Value = mf.ABLine.numGuideLines;
         }
 
         private void tabDisplay_Leave(object sender, EventArgs e)
@@ -273,6 +278,8 @@ namespace AgOpenGPS
         private void rbtnDisplayImperial_Click(object sender, EventArgs e)
         {
             mf.TimedMessageBox(2000, "Units Set", "Imperial");
+            mf.SystemEventWriter("Units To Imperial");
+
             mf.isMetric = false;
             Properties.Settings.Default.setMenu_isMetric = mf.isMetric;
             Properties.Settings.Default.Save();
@@ -283,6 +290,8 @@ namespace AgOpenGPS
         private void rbtnDisplayMetric_Click(object sender, EventArgs e)
         {
             mf.TimedMessageBox(2000, "Units Set", "Metric");
+            mf.SystemEventWriter("Units to Metric");
+
             mf.isMetric = true;
             Properties.Settings.Default.setMenu_isMetric = mf.isMetric;
             Properties.Settings.Default.Save();
@@ -291,5 +300,13 @@ namespace AgOpenGPS
             //FormConfig_Load(this, e);
         }
 
+        private void nudNumGuideLines_Click(object sender, EventArgs e)
+        {
+            if (mf.KeypadToNUD((NudlessNumericUpDown)sender, this))
+            {
+                mf.ABLine.numGuideLines = (int)nudNumGuideLines.Value;
+            }
+
+        }
     }
 }

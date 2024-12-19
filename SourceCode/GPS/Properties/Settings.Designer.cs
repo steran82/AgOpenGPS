@@ -12,7 +12,7 @@ namespace AgOpenGPS.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.9.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.12.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -433,7 +433,7 @@ namespace AgOpenGPS.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2")]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
         public int setDisplay_lineWidth {
             get {
                 return ((int)(this["setDisplay_lineWidth"]));
@@ -2474,7 +2474,7 @@ namespace AgOpenGPS.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool setDisplay_isBrightnessOn {
             get {
                 return ((bool)(this["setDisplay_isBrightnessOn"]));
@@ -2558,7 +2558,7 @@ namespace AgOpenGPS.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("8")]
+        [global::System.Configuration.DefaultSettingValueAttribute("12")]
         public double setAS_functionSpeedLimit {
             get {
                 return ((double)(this["setAS_functionSpeedLimit"]));
@@ -2973,6 +2973,150 @@ namespace AgOpenGPS.Properties {
             }
             set {
                 this["setWindow_isKioskMode"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool setDisplay_isAutoOffAgIO {
+            get {
+                return ((bool)(this["setDisplay_isAutoOffAgIO"]));
+            }
+            set {
+                this["setDisplay_isAutoOffAgIO"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool setWindow_isShutdownComputer {
+            get {
+                return ((bool)(this["setWindow_isShutdownComputer"]));
+            }
+            set {
+                this["setWindow_isShutdownComputer"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool setDisplay_isShutdownWhenNoPower {
+            get {
+                return ((bool)(this["setDisplay_isShutdownWhenNoPower"]));
+            }
+            set {
+                this["setDisplay_isShutdownWhenNoPower"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool setDisplay_isHardwareMessages {
+            get {
+                return ((bool)(this["setDisplay_isHardwareMessages"]));
+            }
+            set {
+                this["setDisplay_isHardwareMessages"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int setGPS_jumpFixAlarmDistance {
+            get {
+                return ((int)(this["setGPS_jumpFixAlarmDistance"]));
+            }
+            set {
+                this["setGPS_jumpFixAlarmDistance"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int setAS_deadZoneDistance {
+            get {
+                return ((int)(this["setAS_deadZoneDistance"]));
+            }
+            set {
+                this["setAS_deadZoneDistance"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public int setAS_deadZoneHeading {
+            get {
+                return ((int)(this["setAS_deadZoneHeading"]));
+            }
+            set {
+                this["setAS_deadZoneHeading"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool setMenu_isLightbarNotSteerBar {
+            get {
+                return ((bool)(this["setMenu_isLightbarNotSteerBar"]));
+            }
+            set {
+                this["setMenu_isLightbarNotSteerBar"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool setTool_isDirectionMarkers {
+            get {
+                return ((bool)(this["setTool_isDirectionMarkers"]));
+            }
+            set {
+                this["setTool_isDirectionMarkers"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public int setAS_numGuideLines {
+            get {
+                return ((int)(this["setAS_numGuideLines"]));
+            }
+            set {
+                this["setAS_numGuideLines"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5")]
+        public int setAS_deadZoneDelay {
+            get {
+                return ((int)(this["setAS_deadZoneDelay"]));
+            }
+            set {
+                this["setAS_deadZoneDelay"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.8")]
+        public double setTram_alpha {
+            get {
+                return ((double)(this["setTram_alpha"]));
+            }
+            set {
+                this["setTram_alpha"] = value;
             }
         }
     }

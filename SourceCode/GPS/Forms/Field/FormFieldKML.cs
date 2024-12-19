@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AgOpenGPS.Culture;
+using System;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -186,6 +187,7 @@ namespace AgOpenGPS
                             else
                             {
                                 mf.TimedMessageBox(2000, gStr.gsErrorreadingKML, gStr.gsChooseBuildDifferentone);
+                                mf.SystemEventWriter("New Field, Error Reading KML");
                             }
                             break;
                         }
@@ -276,6 +278,8 @@ namespace AgOpenGPS
                             else
                             {
                                 mf.TimedMessageBox(2000, gStr.gsErrorreadingKML, gStr.gsChooseBuildDifferentone);
+                                mf.SystemEventWriter("New Field, Error Reading KML ");
+
                             }
                             //if (button.Name == "btnLoadBoundaryFromGE")
                             //{

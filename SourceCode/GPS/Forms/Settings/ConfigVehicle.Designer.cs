@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using AgOpenGPS.Culture;
 using AgOpenGPS.Properties;
 using OpenTK.Graphics.OpenGL;
 
@@ -50,7 +51,6 @@ namespace AgOpenGPS
             {
                 //save current vehicle
                 SettingsIO.ExportAll(mf.vehiclesDirectory + mf.vehicleFileName + ".XML");
-
 
                 if (lvVehicles.SelectedItems.Count > 0)
                 {
@@ -130,6 +130,8 @@ namespace AgOpenGPS
 
                         ///Remind the user
                         mf.TimedMessageBox(2500, "Steer and Machine Settings Sent", "Were Modules Connected?");
+
+                        mf.SystemEventWriter("Vehicle Loaded: " + mf.vehicleFileName + ".XML");
                     }
 
                     UpdateVehicleListView();
@@ -449,12 +451,13 @@ namespace AgOpenGPS
 
             mf.isLogNMEA = chkDisplayLogNMEA.Checked;
             mf.isDrawPolygons = chkDisplayPolygons.Checked;
-            mf.isLightbarOn = chkDisplayLightbar.Checked;
             mf.isKeyboardOn = chkDisplayKeyboard.Checked;
 
             mf.isBrightnessOn = chkDisplayBrightness.Checked;
             mf.isSvennArrowOn = chkSvennArrow.Checked;
             mf.isLogElevation = chkDisplayLogElevation.Checked;
+
+            mf.isDirectionMarkers = chkDirectionMarkers.Checked;
 
             //mf.timeToShowMenus = (int)nudMenusOnTime.Value;
 
@@ -475,6 +478,10 @@ namespace AgOpenGPS
 
             if (rbtnDisplayMetric.Checked) { Properties.Settings.Default.setMenu_isMetric = true; mf.isMetric = true; }
             else { Properties.Settings.Default.setMenu_isMetric = false; mf.isMetric = false; }
+
+            Properties.Settings.Default.setTool_isDirectionMarkers = mf.isDirectionMarkers;
+
+            Properties.Settings.Default.setAS_numGuideLines = mf.ABLine.numGuideLines;
 
             Properties.Settings.Default.Save();
         }

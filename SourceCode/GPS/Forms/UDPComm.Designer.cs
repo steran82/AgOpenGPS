@@ -5,6 +5,8 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Globalization;
 using System.Diagnostics;
+using System.Xml.Linq;
+using AgOpenGPS.Culture;
 
 namespace AgOpenGPS
 {
@@ -249,10 +251,35 @@ namespace AgOpenGPS
                         }
 
                     case 250:
-                        {                            
+                        {
                             if (data.Length != 14)
                                 break;
                             mc.sensorData = data[5];
+                            break;
+                        }
+
+                    case 221: // DD
+                        {                    
+                            //{ 0x80, 0x81, 0x7f, 221, number bytes, seconds to display, mystery byte, 98,99,100,101, CRC };
+                            if (data.Length < 9) break;
+
+                            if (isHardwareMessages)
+                            {
+                                lblHardwareMessage.Text = System.Text.Encoding.UTF8.GetString(data, 7, data[4] - 2);
+                                lblHardwareMessage.Visible = true;
+                                hardwareLineCounter = data[5] * 10;
+
+                                SystemEventWriter(lblHardwareMessage.Text);
+
+                                //color based on byte 6
+                                if (data[6] == 0) lblHardwareMessage.BackColor = Color.Salmon;
+                                else lblHardwareMessage.BackColor = Color.Bisque;
+                            }
+                            else
+                            {
+                                lblHardwareMessage.Visible = false;
+                                hardwareLineCounter = 0;
+                            }
                             break;
                         }
 
@@ -430,6 +457,7 @@ namespace AgOpenGPS
             if ((char)keyData == hotkeys[0]) //autosteer button on off
             {
                 btnAutoSteer.PerformClick();
+                if (!isBtnAutoSteerOn) TimedMessageBox(2000, gStr.gsGuidanceStopped, "Hotkey Triggered");
                 return true;    // indicate that you handled this keystroke
             }
 
@@ -489,7 +517,7 @@ namespace AgOpenGPS
 
             if ((char)keyData == (hotkeys[9])) //open the vehicle Settings
             {
-                btnConfig.PerformClick();
+                toolStripConfig.PerformClick();
                 return true;    // indicate that you handled this keystroke
             }
 
@@ -608,8 +636,10 @@ namespace AgOpenGPS
                 sim.headingTrue += Math.PI;
                 ABLine.isABValid = false;
                 curve.isCurveValid = false;
-                curve.lastHowManyPathsAway = 98888;
-                if (isBtnAutoSteerOn) btnAutoSteer.PerformClick();
+                if (isBtnAutoSteerOn)
+                {
+                    btnAutoYouTurn.PerformClick();
+                }
             }
 
             //speed up
@@ -641,7 +671,7 @@ namespace AgOpenGPS
             //turn right
             if (keyData == Keys.Right)
             {
-                sim.steerAngle += 2;
+                sim.steerAngle += 0.5;
                 if (sim.steerAngle > 40) sim.steerAngle = 40;
                 if (sim.steerAngle < -40) sim.steerAngle = -40;
                 sim.steerAngleScrollBar = sim.steerAngle;
@@ -653,7 +683,7 @@ namespace AgOpenGPS
             //turn left
             if (keyData == Keys.Left)
             {
-                sim.steerAngle -= 2;
+                sim.steerAngle -= 0.5;
                 if (sim.steerAngle > 40) sim.steerAngle = 40;
                 if (sim.steerAngle < -40) sim.steerAngle = -40;
                 sim.steerAngleScrollBar = sim.steerAngle;
@@ -880,7 +910,7 @@ namespace AgOpenGPS
         //        //        bool bResult = SetGestureConfig(
         //        //            Handle, // window for which configuration is specified
         //        //            0,      // reserved, must be 0
-        //        //            1,      // count of GESTURECONFIG structures
+        //        //            1,      // countExit of GESTURECONFIG structures
         //        //            ref gc, // array of GESTURECONFIG structures, dwIDs
         //        //                    // will be processed in the order specified
         //        //                    // and repeated occurances will overwrite

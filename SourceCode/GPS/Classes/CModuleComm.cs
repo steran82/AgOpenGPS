@@ -1,4 +1,6 @@
-﻿namespace AgOpenGPS
+﻿using AgOpenGPS.Culture;
+
+namespace AgOpenGPS
 {
     public class CModuleComm
     {
@@ -55,7 +57,9 @@
                 oldSteerSwitchRemote = steerSwitchHigh;
                 //steerSwith is active low
                 if (steerSwitchHigh == mf.isBtnAutoSteerOn)
+                {
                     mf.btnAutoSteer.PerformClick();
+                }
             }
 
             if (isRemoteWorkSystemOn)
