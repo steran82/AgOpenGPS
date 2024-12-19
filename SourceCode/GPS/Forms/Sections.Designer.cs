@@ -20,14 +20,14 @@ namespace AgOpenGPS
         private void markAsWorkedTrack()
         {
             //is it an AB Line or a Curve?
-            if (trk.gArr[this.trk.idx].mode == (int)TrackMode.AB)
+            if (trk.gArr[this.trk.idx].mode == TrackMode.AB)
             {
                 //AB Line
                 if (!this.trk.gArr[this.trk.idx].workedTracks.Contains(this.ABLine.howManyPathsAway))
                     this.trk.gArr[this.trk.idx].workedTracks.Add(this.ABLine.howManyPathsAway);
 
             }
-            else if (trk.gArr[this.trk.idx].mode == (int)TrackMode.Curve)
+            else if (trk.gArr[this.trk.idx].mode == TrackMode.Curve)
             {
                 //Curve
                 if (!this.trk.gArr[this.trk.idx].workedTracks.Contains(this.curve.howManyPathsAway))

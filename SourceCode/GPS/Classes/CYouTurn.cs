@@ -1,6 +1,12 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
+using System.IO.Compression;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Windows.Forms;
+using System.Xml.Linq;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 
 namespace AgOpenGPS
 {
@@ -202,17 +208,17 @@ namespace AgOpenGPS
                 //Wide turn
                 if (turnOffset > (youTurnRadius * 2.0))
                 {
-                    return (CreateABWideTurn(isTurnLeft));
+                    return CreateABWideTurn();
                 }
                 //Small turn
                 else
                 {
-                    return (CreateABOmegaTurn(isTurnLeft));
+                    return CreateABOmegaTurn();
                 }
             }
             else if (uTurnStyle == 1)
             {
-                return (KStyleTurnAB(isTurnLeft));
+                return KStyleTurnAB();
             }
 
             //prgramming error if you got here
@@ -221,7 +227,7 @@ namespace AgOpenGPS
 
         #region CreateTurn
 
-        private bool CreateCurveOmegaTurn(bool isTurnLeft, vec3 pivotPos)
+        private bool CreateCurveOmegaTurn()
         {
             //keep from making turns constantly - wait 1.5 seconds
             if (mf.makeUTurnCounter < 4)
@@ -2390,48 +2396,19 @@ namespace AgOpenGPS
                 mf.ABLine.howManyPathsAway += (isTurnLeft ^ mf.ABLine.isHeadingSameWay) ? rowSkipsWidth : -rowSkipsWidth;
                 mf.ABLine.isHeadingSameWay = !mf.ABLine.isHeadingSameWay;
 
-            if ( (skip_mode == SkipMode.Alternative) && (rowSkipsWidth2 > 1) )
-            {
-                if (--turnSkips == 0)
+                if ((skip_mode == SkipMode.Alternative) && (rowSkipsWidth2 > 1))
                 {
-                    isYouTurnRight = !isYouTurnRight;
-                    turnSkips = rowSkipsWidth2 * 2 - 1;
+                    if (--turnSkips == 0)
+                    {
+                        isTurnLeft = !isTurnLeft;
+                        turnSkips = rowSkipsWidth2 * 2 - 1;
+                    }
+                    else if (previousBigSkip = !previousBigSkip)
+                        rowSkipsWidth = rowSkipsWidth2 - 1;
+                    else
+                        rowSkipsWidth = rowSkipsWidth2;
                 }
-                else if (previousBigSkip = !previousBigSkip)
-                    rowSkipsWidth = rowSkipsWidth2 - 1;
-                else
-                    rowSkipsWidth = rowSkipsWidth2;
-            }
-            else isYouTurnRight = !isYouTurnRight;
-
-            if (uTurnStyle == 0)
-            {
-                mf.guidanceLookPos.easting = ytList[ytList.Count - 1].easting;
-                mf.guidanceLookPos.northing = ytList[ytList.Count - 1].northing;
-            }
-            else if (uTurnStyle == 1)
-            {
-                mf.guidanceLookPos.easting = kStyleNewLookPos.easting;
-                mf.guidanceLookPos.northing = kStyleNewLookPos.northing;
-
-                pt3Phase = 0;
-            }
-
-            if (mf.trk.idx > -1 && mf.trk.gArr.Count > 0)
-            {
-                if (mf.trk.gArr[mf.trk.idx].mode == (int)TrackMode.AB)
-                {
-                    if (!isGoingStraightThrough)
-                        mf.ABLine.isLateralTriggered = true;
-                    mf.ABLine.isABValid = false;
-                }
-                else
-                {
-                    if (!isGoingStraightThrough)
-                        mf.curve.isLateralTriggered = true;
-                    mf.curve.isCurveValid = false;
-                    mf.curve.lastHowManyPathsAway = 98888;
-                }
+                else isTurnLeft = !isTurnLeft;
             }
         }
 
