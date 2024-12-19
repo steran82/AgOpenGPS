@@ -1,4 +1,5 @@
-﻿using AgOpenGPS.Properties;
+﻿using AgOpenGPS.Culture;
+using AgOpenGPS.Properties;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
@@ -1152,6 +1153,8 @@ namespace AgOpenGPS
                     {
                         wide = 99;
                         mf.TimedMessageBox(3000, "Too Wide", "Max 50 Meters");
+                        mf.SystemEventWriter("Sections, Tool Set Too Wide");
+
                     }
                 }
                 else
@@ -1160,6 +1163,7 @@ namespace AgOpenGPS
                     {
                         wide = 19;
                         mf.TimedMessageBox(3000, "Too Wide", "Max 164 Feet");
+                        mf.SystemEventWriter("Sections, Tool Set Too Wide");
                     }
                 }
 
@@ -1246,6 +1250,7 @@ namespace AgOpenGPS
                                 if (toolWidth > 5000)
                                 {
                                     mf.TimedMessageBox(3000, "Too Wide", "Set to 99, Max 50 Meters");
+                                    mf.SystemEventWriter("Sections, Tool Set Too Wide");
                                     toolWidth = 0;
                                     nudSection01.Value =  99;
                                     nudSection02.Value =  99;
@@ -1270,6 +1275,7 @@ namespace AgOpenGPS
                                 if (toolWidth > 1900)
                                 {
                                     mf.TimedMessageBox(3000, "Too Wide", "Set to 99, Max 164 Feet");
+                                    mf.SystemEventWriter("Sections, Tool Set Too Wide");
                                     toolWidth = 0;
                                     nudSection01.Value = 99;
                                     nudSection02.Value = 99;

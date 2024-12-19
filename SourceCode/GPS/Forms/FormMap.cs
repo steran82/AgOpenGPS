@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL;
+﻿using AgOpenGPS.Culture;
+using OpenTK.Graphics.OpenGL;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -48,7 +49,7 @@ namespace AgOpenGPS
 
             mapControl.Invalidate();
 
-            if (mf.worldGrid.isGeoMap || mf.worldGrid.isRateMap)
+            if (mf.worldGrid.isGeoMap)
             {
                 cboxDrawMap.Checked = true;
                 btnGray.Visible = true;
@@ -352,7 +353,6 @@ namespace AgOpenGPS
                 mf.FileSaveBackPic();
 
                 mf.worldGrid.isGeoMap = false;
-                mf.worldGrid.isRateMap = false;
                 btnGray.Visible = false;
                 btnBuildFieldBackground.Visible = false;
             }
@@ -380,8 +380,6 @@ namespace AgOpenGPS
             catch { }
 
             mf.worldGrid.isGeoMap = false;
-            mf.worldGrid.isRateMap = false;
-
             bingLine.Clear();
             mapControl.Markers.Clear();
             mapControl.Invalidate();
@@ -446,6 +444,7 @@ namespace AgOpenGPS
             if (!mf.worldGrid.isGeoMap)
             {
                 mf.TimedMessageBox(2000, "Map Error", "Map Too Large");
+                mf.SystemEventWriter("GeoMap, Map Too Large");
                 ResetMapGrid();
                 return;
             }
@@ -477,19 +476,18 @@ namespace AgOpenGPS
             catch
             {
                 mf.TimedMessageBox(2000, "File in Use", "Try loading again");
+                mf.SystemEventWriter("GeoMap File in Use, Try Reload");
                 return;
             }
 
             mf.FileSaveBackPic();
-            mf.FileSaveRateMap();
         }
 
         private void btnBuildFieldBackground_Click(object sender, EventArgs e)
         {
-            if (mf.worldGrid.isGeoMap || mf.worldGrid.isRateMap)
+            if (mf.worldGrid.isGeoMap)
             {
                 mf.worldGrid.isGeoMap = false;
-                mf.worldGrid.isRateMap = false;
                 ResetMapGrid();
             }
             SaveBackgroundImage();

@@ -35,6 +35,8 @@ namespace AgOpenGPS
             cboxIsRTK.Checked = Properties.Settings.Default.setGPS_isRTK;
             cboxIsRTK_KillAutoSteer.Checked = Properties.Settings.Default.setGPS_isRTK_KillAutoSteer;
 
+            nudFixJumpDistance.Value = Properties.Settings.Default.setGPS_jumpFixAlarmDistance;
+
             cboxIsReverseOn.Checked = Properties.Settings.Default.setIMU_isReverseOn;
 
             if (Properties.Settings.Default.setF_minHeadingStepDistance == 1.0)
@@ -79,9 +81,9 @@ namespace AgOpenGPS
             mf.ahrs.fusionWeight = (double)hsbarFusion.Value * 0.002;
 
             Properties.Settings.Default.setGPS_isRTK = mf.isRTK_AlarmOn = cboxIsRTK.Checked;
-            Properties.Settings.Default.setGPS_isRTK_KillAutoSteer = mf.isRTK_KillAutosteer = cboxIsRTK_KillAutoSteer.Checked;
 
             Properties.Settings.Default.setIMU_isReverseOn = mf.ahrs.isReverseOn = cboxIsReverseOn.Checked;
+            Properties.Settings.Default.setGPS_isRTK_KillAutoSteer = mf.isRTK_KillAutosteer = cboxIsRTK_KillAutoSteer.Checked;
 
             if (cboxMinGPSStep.Checked)
             {
@@ -93,7 +95,6 @@ namespace AgOpenGPS
                 Properties.Settings.Default.setF_minHeadingStepDistance = 0.5;
                 Properties.Settings.Default.setGPS_minimumStepLimit = 0.05;
             }
-
 
             Properties.Settings.Default.Save();
         }
@@ -115,6 +116,14 @@ namespace AgOpenGPS
             }
         }
 
+        private void nudFixJumpDistance_Click(object sender, EventArgs e)
+        {
+            if (mf.KeypadToNUD((NudlessNumericUpDown)sender, this))
+            {
+                Properties.Settings.Default.setGPS_jumpFixAlarmDistance = ((int)nudFixJumpDistance.Value);
+                //mf.jumpDistanceAlarm = Properties.Settings.Default.setGPS_dualHeadingOffset;
+            }
+        }
 
         private void nudDualHeadingOffset_Click(object sender, EventArgs e)
         {
@@ -255,6 +264,7 @@ namespace AgOpenGPS
                 mf.ahrs.imuRoll += mf.ahrs.rollZero;
                 mf.ahrs.rollZero = mf.ahrs.imuRoll;
                 lblRollZeroOffset.Text = (mf.ahrs.rollZero).ToString("N2");
+                mf.SystemEventWriter("Roll Zeroed with " + mf.ahrs.rollZero.ToString());
             }
             else
             {
@@ -266,8 +276,9 @@ namespace AgOpenGPS
         {
             mf.ahrs.rollZero = 0;
             lblRollZeroOffset.Text = "0.00";
+            mf.SystemEventWriter("Roll Zero Offset Removed");
         }
-         
+
         private void btnResetIMU_Click(object sender, EventArgs e)
         {
             mf.ahrs.imuHeading = 99999;
@@ -302,6 +313,9 @@ namespace AgOpenGPS
             cboxSectionsSound.Checked = Properties.Settings.Default.setSound_isSectionsOn;
 
             cboxAutoStartAgIO.Checked = Properties.Settings.Default.setDisplay_isAutoStartAgIO;
+            cboxAutoOffAgIO.Checked = Properties.Settings.Default.setDisplay_isAutoOffAgIO;
+            cboxShutdownWhenNoPower.Checked = Properties.Settings.Default.setDisplay_isShutdownWhenNoPower;
+            cboxHardwareMessages.Checked = Properties.Settings.Default.setDisplay_isHardwareMessages;
         }
 
         private void tabBtns_Leave(object sender, EventArgs e)
@@ -334,6 +348,12 @@ namespace AgOpenGPS
             Properties.Settings.Default.setDisplay_isAutoStartAgIO = cboxAutoStartAgIO.Checked;
             mf.isAutoStartAgIO = cboxAutoStartAgIO.Checked;
 
+            Properties.Settings.Default.setDisplay_isAutoOffAgIO = cboxAutoOffAgIO.Checked;
+
+            Properties.Settings.Default.setDisplay_isShutdownWhenNoPower = cboxShutdownWhenNoPower.Checked;
+
+            Properties.Settings.Default.setDisplay_isHardwareMessages = cboxHardwareMessages.Checked;
+
             Properties.Settings.Default.Save();
         }
 
@@ -344,7 +364,6 @@ namespace AgOpenGPS
                 form.ShowDialog(mf);
             }
         }
-
 
         #endregion
     }

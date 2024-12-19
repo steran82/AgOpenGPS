@@ -9,6 +9,7 @@ using System.IO;
 using System.Globalization;
 using System.Xml;
 using System.Text;
+using AgOpenGPS.Culture;
 
 namespace AgOpenGPS
 {
@@ -558,6 +559,7 @@ namespace AgOpenGPS
             if (!File.Exists(filename))
             {
                 TimedMessageBox(2000, gStr.gsFileError, "Missing Headlines File");
+                SystemEventWriter("Load Field, Missing Headlines File");
             }
             else
             {
@@ -686,7 +688,7 @@ namespace AgOpenGPS
                             writer.WriteLine(trk.gArr[i].nudgeDistance.ToString(CultureInfo.InvariantCulture));
 
                             //write out the mode
-                            writer.WriteLine(trk.gArr[i].mode.ToString(CultureInfo.InvariantCulture));
+                            writer.WriteLine(((int)trk.gArr[i].mode).ToString(CultureInfo.InvariantCulture));
 
                             //visible?
                             writer.WriteLine(trk.gArr[i].isVisible.ToString(CultureInfo.InvariantCulture));
@@ -752,6 +754,7 @@ namespace AgOpenGPS
             if (!File.Exists(filename))
             {
                 TimedMessageBox(2000, gStr.gsFileError, "Missing Tracks File");
+                SystemEventWriter("Load Field, Missing Tracks File");
             }
             else
             {
@@ -792,7 +795,7 @@ namespace AgOpenGPS
                             trk.gArr[trk.idx].nudgeDistance = double.Parse(line, CultureInfo.InvariantCulture);
 
                             line = reader.ReadLine();
-                            trk.gArr[trk.idx].mode = int.Parse(line, CultureInfo.InvariantCulture);
+                            trk.gArr[trk.idx].mode = (TrackMode)int.Parse(line, CultureInfo.InvariantCulture);
 
                             line = reader.ReadLine();
                             trk.gArr[trk.idx].isVisible = bool.Parse(line);
@@ -850,7 +853,7 @@ namespace AgOpenGPS
 
                         for (int i = 0; i < cnt; i++)
                         {
-                            if (trk.gArr[i].mode != (int)TrackMode.Curve) continue;
+                            if (trk.gArr[i].mode != TrackMode.Curve) continue;
 
                             //write out the Name
                             writer.WriteLine(trk.gArr[i].name);
@@ -911,6 +914,7 @@ namespace AgOpenGPS
             if (!File.Exists(filename))
             {
                 TimedMessageBox(2000, gStr.gsFileError, "Missing Curve File");
+                SystemEventWriter("Load Field, Missing Curve File");
             }
             else
             {
@@ -933,7 +937,7 @@ namespace AgOpenGPS
                             if (nam.Length > 4 && nam.Substring(0, 5) == "Bound")
                             {
                                 trk.gArr[trk.gArr.Count - 1].name = nam;
-                                trk.gArr[trk.gArr.Count - 1].mode = (int)TrackMode.bndCurve;
+                                trk.gArr[trk.gArr.Count - 1].mode = TrackMode.bndCurve;
                             }
                             else
                             {
@@ -942,7 +946,7 @@ namespace AgOpenGPS
                                 else
                                     trk.gArr[trk.gArr.Count - 1].name = nam;
 
-                                trk.gArr[trk.gArr.Count - 1].mode = (int)TrackMode.Curve;
+                                trk.gArr[trk.gArr.Count - 1].mode = TrackMode.Curve;
                             }
 
                             // get the average heading
@@ -1011,7 +1015,7 @@ namespace AgOpenGPS
                 {
                     foreach (var item in trk.gArr)
                     {
-                        if (item.mode == 2)
+                        if (item.mode == TrackMode.AB)
                         {
                             //make it culture invariant
                             string line = item.name
@@ -1073,7 +1077,7 @@ namespace AgOpenGPS
                             else
                                 trk.gArr[i].name = words[0];
 
-                            trk.gArr[i].mode = (int)TrackMode.AB;
+                            trk.gArr[i].mode = TrackMode.AB;
 
 
                             trk.gArr[i].heading = glm.toRadians(double.Parse(words[1], CultureInfo.InvariantCulture));
@@ -1594,17 +1598,17 @@ namespace AgOpenGPS
                 bnd.isHeadlandOn = true;
                 btnHeadlandOnOff.Image = Properties.Resources.HeadlandOn;
                 btnHeadlandOnOff.Visible = true;
-                btnHydLift.Visible = true;
                 btnHydLift.Image = Properties.Resources.HydraulicLiftOff;
-
             }
             else
             {
                 bnd.isHeadlandOn = false;
                 btnHeadlandOnOff.Image = Properties.Resources.HeadlandOff;
                 btnHeadlandOnOff.Visible = false;
-                btnHydLift.Visible = false;
             }
+
+            int sett = Properties.Settings.Default.setArdMac_setting0;
+            btnHydLift.Visible = (((sett & 2) == 2) && bnd.isHeadlandOn); 
 
             //trams ---------------------------------------------------------------------------------
             fileAndDirectory = fieldsDirectory + currentFieldDirectory + "\\Tram.txt";
@@ -1757,8 +1761,7 @@ namespace AgOpenGPS
                 }
             }
 
-            worldGrid.isGeoMap = worldGrid.isRateMap = false;
-            worldGrid.numRateChannels = 0;
+            worldGrid.isGeoMap = false;
 
             //Back Image
             fileAndDirectory = fieldsDirectory + currentFieldDirectory + "\\BackPic.txt";
@@ -1803,107 +1806,6 @@ namespace AgOpenGPS
                         else
                         {
                             worldGrid.isGeoMap = false;
-                        }
-                    }
-                }
-            }
-
-            //is there rateChannels?
-            if (!worldGrid.isGeoMap)
-            {
-                fileAndDirectory = fieldsDirectory + currentFieldDirectory + "\\RateMap.txt";
-                if (File.Exists(fileAndDirectory))
-                {
-                    using (StreamReader reader = new StreamReader(fileAndDirectory))
-                    {
-                        try
-                        {
-                            //read header
-                            line = reader.ReadLine();
-
-                            line = reader.ReadLine();
-                            worldGrid.isRateMap = bool.Parse(line);
-
-                            line = reader.ReadLine();
-                            worldGrid.eastingMaxRate = double.Parse(line, CultureInfo.InvariantCulture);
-                            line = reader.ReadLine();
-                            worldGrid.eastingMinRate = double.Parse(line, CultureInfo.InvariantCulture);
-                            line = reader.ReadLine();
-                            worldGrid.northingMaxRate = double.Parse(line, CultureInfo.InvariantCulture);
-                            line = reader.ReadLine();
-                            worldGrid.northingMinRate = double.Parse(line, CultureInfo.InvariantCulture);
-                            line = reader.ReadLine();
-                            worldGrid.numRateChannels = int.Parse(line, CultureInfo.InvariantCulture);
-                        }
-                        catch (Exception)
-                        {
-                            worldGrid.isRateMap = false;
-                        }
-
-                        bool isFileMissing = false;
-
-                        if (worldGrid.isRateMap)
-                        {
-                            fileAndDirectory = fieldsDirectory + currentFieldDirectory + "\\rateMap1.png";
-                            if (File.Exists(fileAndDirectory))
-                            {
-                                var bitmap = new Bitmap(Image.FromFile(fileAndDirectory));
-
-                                GL.BindTexture(TextureTarget.Texture2D, texture[(int)textures.RateMap1]);
-                                BitmapData bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bitmapData.Width, bitmapData.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bitmapData.Scan0);
-                                bitmap.UnlockBits(bitmapData);
-                            }
-                            else
-                            {
-                                isFileMissing = true;
-                            }
-
-                            if (worldGrid.numRateChannels > 1)
-                            {
-                                fileAndDirectory = fieldsDirectory + currentFieldDirectory + "\\rateMap2.png";
-                                if (File.Exists(fileAndDirectory))
-                                {
-                                    var bitmap = new Bitmap(Image.FromFile(fileAndDirectory));
-
-                                    GL.BindTexture(TextureTarget.Texture2D, texture[(int)textures.RateMap2]);
-                                    BitmapData bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bitmapData.Width, bitmapData.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bitmapData.Scan0);
-                                    bitmap.UnlockBits(bitmapData);
-                                }
-                                else
-                                {
-                                    isFileMissing = true;
-                                }
-                            }
-
-                            if (worldGrid.numRateChannels > 2)
-                            {
-
-                                fileAndDirectory = fieldsDirectory + currentFieldDirectory + "\\rateMap3.png";
-                                if (File.Exists(fileAndDirectory))
-                                {
-                                    var bitmap = new Bitmap(Image.FromFile(fileAndDirectory));
-
-                                    GL.BindTexture(TextureTarget.Texture2D, texture[(int)textures.RateMap3]);
-                                    BitmapData bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bitmapData.Width, bitmapData.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bitmapData.Scan0);
-                                    bitmap.UnlockBits(bitmapData);
-                                }
-                                else
-                                {
-                                    isFileMissing = true;
-                                }
-                            }
-
-                            if (isFileMissing)
-                            {
-                                YesMessageBox("Missing one of the 3 rate images, " +
-                                " There should be MapRate1, MapRate2, MapRate3, " +
-                                " VR is turned off") ;
-
-                                worldGrid.isRateMap = false;
-                            }
                         }
                     }
                 }
@@ -2289,42 +2191,6 @@ namespace AgOpenGPS
             }
         }
 
-        public void FileSaveRateMap()
-        {
-            //get the directory and make sure it exists, create if not
-            string dirField = fieldsDirectory + currentFieldDirectory + "\\";
-
-            string directoryName = Path.GetDirectoryName(dirField);
-            if ((directoryName.Length > 0) && (!Directory.Exists(directoryName)))
-            { Directory.CreateDirectory(directoryName); }
-
-            //write out the file
-            using (StreamWriter writer = new StreamWriter(dirField + "RateMap.Txt"))
-            {
-                writer.WriteLine("$RateMap");
-                //outer track of outer boundary tram
-                if (worldGrid.isRateMap)
-                {
-                    writer.WriteLine(true);
-                    writer.WriteLine(worldGrid.eastingMaxRate.ToString(CultureInfo.InvariantCulture));
-                    writer.WriteLine(worldGrid.eastingMinRate.ToString(CultureInfo.InvariantCulture));
-                    writer.WriteLine(worldGrid.northingMaxRate.ToString(CultureInfo.InvariantCulture));
-                    writer.WriteLine(worldGrid.northingMinRate.ToString(CultureInfo.InvariantCulture));
-                    writer.WriteLine(worldGrid.numRateChannels.ToString(CultureInfo.InvariantCulture));
-
-                }
-                else
-                {
-                    writer.WriteLine(false);
-                    writer.WriteLine(300);
-                    writer.WriteLine(-300);
-                    writer.WriteLine(300);
-                    writer.WriteLine(-300);
-                    writer.WriteLine(0);
-                }
-            }
-        }
-
         //save the headland
         public void FileSaveHeadland()
         {
@@ -2601,6 +2467,14 @@ namespace AgOpenGPS
                 writer.Write(pn.logNMEASentence.ToString());
             }
             pn.logNMEASentence.Clear();
+        }
+
+        public void FileSaveSystemEvents()
+        {
+            using (StreamWriter writer = new StreamWriter("zSystemEventsLog_log.txt", true))
+            {
+                writer.Write(sbSystemEvents);
+            }
         }
 
         //save nmea sentences

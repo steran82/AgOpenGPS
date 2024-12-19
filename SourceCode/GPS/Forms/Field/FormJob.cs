@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AgOpenGPS.Culture;
+using System;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -89,6 +90,8 @@ namespace AgOpenGPS
             //open the Resume.txt and continue from last exit
             mf.FileOpenField("Resume");
 
+            mf.SystemEventWriter("Job Form, Field Resume");
+
             //back to FormGPS
             DialogResult = DialogResult.OK;
             Close();
@@ -105,6 +108,7 @@ namespace AgOpenGPS
                 {
                     if (mf.isJobStarted) mf.FileSaveEverythingBeforeClosingField();
                     mf.FileOpenField(mf.filePickerFileAndDirectory);
+
                     Close();
                 }
                 else
@@ -250,8 +254,6 @@ namespace AgOpenGPS
 
         private void btnFromISOXML_Click(object sender, EventArgs e)
         {
-            //mf.TimedMessageBox(2000, "Not Implemented", "Coming Soon");
-            //return;
             if (mf.isJobStarted) mf.FileSaveEverythingBeforeClosingField();
             //back to FormGPS
             DialogResult = DialogResult.Abort;

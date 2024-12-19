@@ -16,7 +16,8 @@ namespace AgOpenGPS
 
         private bool isA = true;
         private int start = 99999, end = 99999;
-        private int bndSelect = 0, mode;
+        private int bndSelect = 0;
+        TrackMode mode = TrackMode.None;
         public List<vec3> sliceArr = new List<vec3>();
         public List<vec3> backupList = new List<vec3>();
 
@@ -38,6 +39,7 @@ namespace AgOpenGPS
 
         private void FormHeadLine_Load(object sender, EventArgs e)
         {
+            this.Text = "1: Set distance, 2: Tap Build, 3: Create Clip Lines";
             mf.hdl.idx = -1;
             //label3.Text = mf.unitsFtM +"       Tool: ";
 
@@ -142,6 +144,7 @@ namespace AgOpenGPS
             if (nudSetDistance.Value == 0 && rbtnCurve.Checked)
             {
                 mf.TimedMessageBox(3000, "Distance Error", "Distance Set to 0, Nothing to Move");
+                mf.SystemEventWriter("Headland, Distance=0, Can't Move");
                 return;
             }
             sliceArr?.Clear();
@@ -317,7 +320,7 @@ namespace AgOpenGPS
                             sliceArr.Insert(0, pt);
                         }
 
-                        mode = (int)TrackMode.Curve;
+                        mode = TrackMode.Curve;
                     }
                     else
                     {
@@ -392,7 +395,7 @@ namespace AgOpenGPS
                         sliceArr.Insert(0, pt);
                     }
 
-                    mode = (int)TrackMode.AB;
+                    mode = TrackMode.AB;
 
                     start = 99999; end = 99999;
                 }
@@ -485,7 +488,7 @@ namespace AgOpenGPS
                 //GL.LineStipple(1, 0x7070);
                 GL.PointSize(8);
 
-                if (mode == (int)TrackMode.AB)
+                if (mode == TrackMode.AB)
                 {
                     GL.Color3(0.95f, 0.09f, 0.0f);
                 }
@@ -838,6 +841,8 @@ namespace AgOpenGPS
             if (isStart < 2)
             {
                 mf.TimedMessageBox(2000, "Error", "Crossings not Found");
+                mf.SystemEventWriter("Headland, Crossings Not Found");
+
                 return;
             }
 

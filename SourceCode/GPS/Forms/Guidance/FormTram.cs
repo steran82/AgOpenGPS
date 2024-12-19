@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AgOpenGPS.Culture;
+using System;
 using System.Windows.Forms;
 
 namespace AgOpenGPS
@@ -29,6 +30,9 @@ namespace AgOpenGPS
 
         private void FormTram_Load(object sender, EventArgs e)
         {
+            tbarTramAlpha.Value = (int)(mf.tram.tramAlpha * 100);
+            lblAplha.Text = tbarTramAlpha.Value.ToString() + "%";
+
             if (Properties.Settings.Default.setTram_passes < 1)
             {
                 Properties.Settings.Default.setTram_passes = 1;
@@ -110,6 +114,9 @@ namespace AgOpenGPS
             mf.FileSaveTram();
             mf.PanelUpdateRightAndBottom();
             mf.FixTramModeButton();
+
+            Properties.Settings.Default.setTram_alpha = mf.tram.tramAlpha;
+            Properties.Settings.Default.Save();
         }
 
         private void MoveBuildTramLine(double Dist)
@@ -160,7 +167,7 @@ namespace AgOpenGPS
 
         private void btnSwapAB_Click(object sender, EventArgs e)
         {
-            if (mf.trk.gArr[mf.trk.idx].mode == (int)TrackMode.AB)
+            if (mf.trk.gArr[mf.trk.idx].mode == TrackMode.AB)
             {
                 vec2 bob = mf.trk.gArr[mf.trk.idx].ptA;
                 mf.trk.gArr[mf.trk.idx].ptA = mf.trk.gArr[mf.trk.idx].ptB;
@@ -222,6 +229,7 @@ namespace AgOpenGPS
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
+
             Close();
         }
 
@@ -249,6 +257,12 @@ namespace AgOpenGPS
             }
 
             MoveBuildTramLine(0);
+        }
+
+        private void tbarTramAlpha_Scroll(object sender, EventArgs e)
+        {
+            mf.tram.tramAlpha = (double)tbarTramAlpha.Value * 0.01;
+            lblAplha.Text = tbarTramAlpha.Value.ToString() + "%";
         }
     }
 }

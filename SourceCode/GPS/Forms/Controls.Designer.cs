@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using AgOpenGPS.Culture;
 using AgOpenGPS.Forms;
 using AgOpenGPS.Forms.Pickers;
 using AgOpenGPS.Properties;
@@ -41,15 +42,20 @@ namespace AgOpenGPS
                 EnableYouTurnButtons();
                 ABLine.isABValid = false;
                 curve.isCurveValid = false;
-                curve.lastHowManyPathsAway = 98888;
                 ct.isLocked = false;
                 guidanceLookAheadTime = Properties.Settings.Default.setAS_guidanceLookAheadTime;
                 btnContourLock.Image = Resources.ColorUnlocked;
-                if (isBtnAutoSteerOn) btnAutoSteer.PerformClick();
+                if (isBtnAutoSteerOn)
+                {
+                    btnAutoSteer.PerformClick();
+                    TimedMessageBox(2000, gStr.gsGuidanceStopped, gStr.gsContourOn);
+                }
+
             }
 
             PanelUpdateRightAndBottom();
-        }                
+        }
+        
         private void btnContourLock_Click(object sender, EventArgs e)
         {
             if (ct.isContourBtnOn)
@@ -101,15 +107,16 @@ namespace AgOpenGPS
                         tracksVisible++;
                     }
                 }
-                
+
+                int btnCount = 0;
                 //nudge closest
                 flp1.Controls[0].Visible = tracksVisible > 0;
 
                 //always these 3 - Build and if a bnd then ABDraw
                 flp1.Controls[1].Visible = isBnd;
+
                 flp1.Controls[2].Visible = true;
                 flp1.Controls[3].Visible = true;
-
 
                 //auto snap to pivot
                 flp1.Controls[4].Visible = tracksVisible > 0;
@@ -120,8 +127,13 @@ namespace AgOpenGPS
                 //ref nudge
                 flp1.Controls[6].Visible = tracksVisible > 0;
 
+                for (int i = 0; i < flp1.Controls.Count; i++)
+                {
+                    if (flp1.Controls[i].Visible) btnCount++;
+                }
+
                 //position of panel
-                flp1.Top = this.Height -260;
+                flp1.Top = this.Height - 120 - (btnCount*75);
                 flp1.Left = this.Width - 120 - flp1.Width;
                 trackMethodPanelCounter = 4;
             }
@@ -132,13 +144,35 @@ namespace AgOpenGPS
         {
             longAvgPivDistance = 0;
 
+            if (!timerSim.Enabled)
+            {
+                if (avgSpeed > vehicle.maxSteerSpeed)
+                {
+                    if (isBtnAutoSteerOn)
+                    {
+                        isBtnAutoSteerOn = false;
+                        btnAutoSteer.Image = Properties.Resources.AutoSteerOff;
+                        //if (yt.isYouTurnBtnOn) btnAutoYouTurn.PerformClick();
+                        if (sounds.isSteerSoundOn) sounds.sndAutoSteerOff.Play();
+                    }
+
+                    SystemEventWriter("Steer Off, Above Max Safe Speed for Autosteer");
+
+                    if (isMetric)
+                        TimedMessageBox(3000, "AutoSteer Disabled", "Above Maximum Safe Steering Speed: " + vehicle.maxSteerSpeed.ToString("N0") + " Kmh");
+                    else
+                        TimedMessageBox(3000, "AutoSteer Disabled", "Above Maximum Safe Steering Speed: " + (vehicle.maxSteerSpeed * 0.621371).ToString("N1") + " MPH");
+
+                    return;
+                }
+            }
+
             if (isBtnAutoSteerOn)
             {
                 isBtnAutoSteerOn = false;
                 btnAutoSteer.Image = Properties.Resources.AutoSteerOff;
                 //if (yt.isYouTurnBtnOn) btnAutoYouTurn.PerformClick();
                 if (sounds.isSteerSoundOn) sounds.sndAutoSteerOff.Play();
-                //trk.isAutoSnapped = false;
             }
             else
             {
@@ -147,11 +181,12 @@ namespace AgOpenGPS
                     isBtnAutoSteerOn = true;
                     btnAutoSteer.Image = Properties.Resources.AutoSteerOn;
                     if (sounds.isSteerSoundOn) sounds.sndAutoSteerOn.Play();
-                    //if (trk.isAutoSnapToPivot)
-                    //{
-                    //    trk.SnapToPivot();
-                    //    trk.isAutoSnapped = true;   
-                    //}
+
+                    //redraw uturn if btn enabled.
+                    if (yt.isYouTurnBtnOn)
+                    {
+                        yt.ResetYouTurn();
+                    }
                 }
                 else
                 {
@@ -160,6 +195,7 @@ namespace AgOpenGPS
                 }
             }
         }
+
         private void btnAutoYouTurn_Click(object sender, EventArgs e)
         {
             yt.isTurnCreationTooClose = false;
@@ -167,12 +203,13 @@ namespace AgOpenGPS
             if (bnd.bndList.Count == 0)
             {
                 TimedMessageBox(2000, gStr.gsNoBoundary, gStr.gsCreateABoundaryFirst);
+                SystemEventWriter("Uturn attempted without boundary");
                 return;
             }
 
             yt.turnTooCloseTrigger = false;
 
-            if (!yt.isYouTurnBtnOn && (trk.gArr[trk.idx].mode == (int)TrackMode.AB || trk.gArr[trk.idx].mode == (int)TrackMode.Curve))
+            if (!yt.isYouTurnBtnOn)
             {
                 //new direction so reset where to put turn diagnostic
                 yt.ResetCreatedYouTurn();
@@ -203,7 +240,6 @@ namespace AgOpenGPS
             trk.isAutoTrack = false;
             btnAutoTrack.Image = Resources.AutoTrackOff;
 
-
             if (trk.gArr.Count > 1)
             {
                 while (true)
@@ -215,11 +251,17 @@ namespace AgOpenGPS
                     {
                         guideLineCounter = 20;
                         lblGuidanceLine.Visible = true;
+                        lblGuidanceLine.Text = trk.gArr[trk.idx].name;
                         break;
                     }
                 }
 
-                if (isBtnAutoSteerOn) btnAutoSteer.PerformClick();
+                if (isBtnAutoSteerOn)
+                {
+                    btnAutoSteer.PerformClick();
+                    TimedMessageBox(2000, gStr.gsGuidanceStopped, "Track Changed");
+                }
+
                 if (yt.isYouTurnBtnOn) btnAutoYouTurn.PerformClick();
 
                 lblNumCu.Text = (trk.idx + 1).ToString() + "/" + trk.gArr.Count.ToString();
@@ -229,7 +271,6 @@ namespace AgOpenGPS
 
             ABLine.isABValid = false;
             curve.isCurveValid = false;
-            curve.lastHowManyPathsAway = 98888;
         }
 
         private void btnCycleLinesBk_Click(object sender, EventArgs e)
@@ -254,19 +295,22 @@ namespace AgOpenGPS
                     {
                         guideLineCounter = 20;
                         lblGuidanceLine.Visible = true;
+                        lblGuidanceLine.Text = trk.gArr[trk.idx].name;
                         break;
                     }
                 }
 
-                if (isBtnAutoSteerOn) btnAutoSteer.PerformClick();
-                if (yt.isYouTurnBtnOn) btnAutoYouTurn.PerformClick();
+                if (isBtnAutoSteerOn)
+                {
+                    btnAutoSteer.PerformClick();
+                    TimedMessageBox(2000, gStr.gsGuidanceStopped, "Track Changed");
+                }
 
                 lblNumCu.Text = (trk.idx + 1).ToString() + "/" + trk.gArr.Count.ToString();
             }
 
             ABLine.isABValid = false;
             curve.isCurveValid = false;
-            curve.lastHowManyPathsAway = 98888;
 
             twoSecondCounter = 100;
         }
@@ -426,6 +470,7 @@ namespace AgOpenGPS
         }
 
         public bool isCancelJobMenu;
+
         private void btnJobMenu_Click(object sender, EventArgs e)
         {
             if (!isFirstFixPositionSet || sentenceCounter > 299)
@@ -438,7 +483,9 @@ namespace AgOpenGPS
                 else
                 {
                     TimedMessageBox(2500, "No GPS", "No GPS Position Found");
+
                 }
+                SystemEventWriter("No GPS Position, Field Closed");
                 return;
             }
 
@@ -452,6 +499,15 @@ namespace AgOpenGPS
 
             f = null;
             f = Application.OpenForms["FormFieldData"];
+
+            if (f != null)
+            {
+                f.Focus();
+                f.Close();
+            }
+
+            f = null;
+            f = Application.OpenForms["FormEventViewer"];
 
             if (f != null)
             {
@@ -530,8 +586,17 @@ namespace AgOpenGPS
                     double distance = Math.Pow((pn.latStart - pn.latitude), 2) + Math.Pow((pn.lonStart - pn.longitude), 2);
                     distance = Math.Sqrt(distance);
                     distance *= 100;
-                    if (distance > 10) TimedMessageBox(2500, "High Field Start Distance Warning", "Field Start is "
+                    if (distance > 10)
+                    {
+                        TimedMessageBox(2500, "High Field Start Distance Warning", "Field Start is "
                         + distance.ToString("N1") + " km From current position");
+
+                        SystemEventWriter("High Field Start Distance Warning");
+                    }
+
+                    FileSaveSystemEvents();
+                    sbSystemEvents.Clear();
+                    sbSystemEvents.Append(currentFieldDirectory + " *Opened* " + (DateTime.Now.ToLongDateString()) + '\r');
                 }
             }
 
@@ -579,6 +644,11 @@ namespace AgOpenGPS
             ExportFieldAs_ISOXMLv3();
             ExportFieldAs_ISOXMLv4();
 
+            SystemEventWriter(currentFieldDirectory + " ** Closed **");
+
+            FileSaveSystemEvents();
+            sbSystemEvents.Clear();
+
             Settings.Default.setF_CurrentDir = currentFieldDirectory;
             Settings.Default.Save();
 
@@ -602,7 +672,7 @@ namespace AgOpenGPS
                 return;
             }
 
-            Form form99 = new FormTram(this, trk.gArr[trk.idx].mode != (int)TrackMode.AB);
+            Form form99 = new FormTram(this, trk.gArr[trk.idx].mode != TrackMode.AB);
             form99.Show(this);
 
         }
@@ -684,7 +754,12 @@ namespace AgOpenGPS
             //btnContourPriority.Enabled = true;
 
             if (yt.isYouTurnBtnOn) btnAutoYouTurn.PerformClick();
-            if (isBtnAutoSteerOn) btnAutoSteer.PerformClick();
+            if (isBtnAutoSteerOn)
+            {
+                btnAutoSteer.PerformClick();
+                TimedMessageBox(2000, gStr.gsGuidanceStopped, "Paths Enabled");
+                SystemEventWriter("Autosteer On While Enable Paths");
+            }
 
             DisableYouTurnButtons();
 
@@ -913,6 +988,20 @@ namespace AgOpenGPS
         }
         private void btnStartAgIO_Click(object sender, EventArgs e)
         {
+            //byte[] data = { 0x80, 0x81, 0x7f, 0xDD, 6, 4, 0, 98,99,100,101, 0xCC };
+
+            //if (isHardwareMessages)
+            //{
+            //    lblHardwareMessage.Text = System.Text.Encoding.UTF8.GetString(data, 7, data[4] - 2);
+            //    lblHardwareMessage.Visible = true;
+            //    hardwareLineCounter = data[5] * 10;
+            //}
+            //else
+            //{
+            //    lblHardwareMessage.Visible = false;
+            //    hardwareLineCounter = 0;
+            //}
+
             Process[] processName = Process.GetProcessesByName("AgIO");
             if (processName.Length == 0)
             {
@@ -1119,6 +1208,42 @@ namespace AgOpenGPS
         }
         private void btnShutdown_Click(object sender, EventArgs e)
         {
+            Form f = Application.OpenForms["FormGPSData"];
+
+            if (f != null)
+            {
+                f.Focus();
+                f.Close();
+            }
+
+            f = null;
+            f = Application.OpenForms["FormFieldData"];
+
+            if (f != null)
+            {
+                f.Focus();
+                f.Close();
+            }
+
+            f = null;
+            f = Application.OpenForms["FormEventViewer"];
+
+            if (f != null)
+            {
+                f.Focus();
+                f.Close();
+            }
+
+            f = null;
+            f = Application.OpenForms["FormPan"];
+
+            if (f != null)
+            {
+                isPanFormVisible = false;
+                f.Focus();
+                f.Close();
+            }
+
             Close();
         }
         private void btnMinimizeMainForm_Click(object sender, EventArgs e)
@@ -1145,7 +1270,6 @@ namespace AgOpenGPS
             {
                 fourSecondCounter = 4;
             }
-
         }
 
         #endregion
@@ -1280,6 +1404,10 @@ namespace AgOpenGPS
                     Settings.Default.setF_culture = "en";
                     Settings.Default.setF_workingDirectory = "Default";
                     Settings.Default.Save();
+
+                    //save event
+                    SystemEventWriter("Reset ALL event occured" );
+                    FileSaveSystemEvents();
 
                     MessageBox.Show(gStr.gsProgramWillExitPleaseRestart);
                     System.Environment.Exit(1);
@@ -1610,13 +1738,11 @@ namespace AgOpenGPS
             }
 
         }
-
         private void btnAutoTrack_Click(object sender, EventArgs e)
         {
             trk.isAutoTrack = !trk.isAutoTrack;
             btnAutoTrack.Image = trk.isAutoTrack ? Resources.AutoTrack : Resources.AutoTrackOff;            
         }
-
         private void btnResetToolHeading_Click(object sender, EventArgs e)
         {
             tankPos.heading = fixHeading;
@@ -1627,7 +1753,6 @@ namespace AgOpenGPS
             toolPivotPos.easting = tankPos.easting + (Math.Sin(toolPivotPos.heading) * (tool.trailingHitchLength));
             toolPivotPos.northing = tankPos.northing + (Math.Cos(toolPivotPos.heading) * (tool.trailingHitchLength));
         }
-
         private void btnTramDisplayMode_Click(object sender, EventArgs e)
         {
             tram.isLeftManualOn = false;
@@ -1664,7 +1789,6 @@ namespace AgOpenGPS
                     break;
             }
         }
-
         public bool isPatchesChangingColor = false;
         private void btnChangeMappingColor_Click(object sender, EventArgs e)
         {
@@ -1735,8 +1859,7 @@ namespace AgOpenGPS
             Properties.Settings.Default.set_youSkipWidth = yt.rowSkipsWidth;
             Properties.Settings.Default.Save();
         }
-        private void 
-            btnHeadlandOnOff_Click(object sender, EventArgs e)
+        private void btnHeadlandOnOff_Click(object sender, EventArgs e)
         {
             bnd.isHeadlandOn = !bnd.isHeadlandOn;
             if (bnd.isHeadlandOn)
@@ -1758,7 +1881,6 @@ namespace AgOpenGPS
 
             PanelUpdateRightAndBottom();
         }
-
         private void cboxIsSectionControlled_Click(object sender, EventArgs e)
         {
             if (cboxIsSectionControlled.Checked) cboxIsSectionControlled.Image = Properties.Resources.HeadlandSectionOn;
@@ -1767,8 +1889,6 @@ namespace AgOpenGPS
             Properties.Settings.Default.setHeadland_isSectionControlled = cboxIsSectionControlled.Checked;
             Properties.Settings.Default.Save();
         }
-
-
         private void btnHydLift_Click(object sender, EventArgs e)
         {
             if (bnd.isHeadlandOn)
@@ -1796,6 +1916,20 @@ namespace AgOpenGPS
 
         #region Tools Menu
 
+        private void allSettingsMenuItem_Click(object sender, EventArgs e)
+        {
+            Form form = new FormAllSettings(this);
+            form.Show(this);
+        }
+        private void guidelinesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            isSideGuideLines = !isSideGuideLines;
+            if (isSideGuideLines) guidelinesToolStripMenuItem.Checked = true;
+            else guidelinesToolStripMenuItem.Checked = false;
+
+            Properties.Settings.Default.setMenu_isSideGuideLines = isSideGuideLines;
+            Properties.Settings.Default.Save();
+        }
         private void boundaryToolToolStripMenu_Click(object sender, EventArgs e)
         {
             if (isJobStarted)
@@ -1806,7 +1940,6 @@ namespace AgOpenGPS
                 }
             }
         }
-
         private void SmoothABtoolStripMenu_Click(object sender, EventArgs e)
         {
             if (isJobStarted && trk.idx > -1)
@@ -1891,6 +2024,7 @@ namespace AgOpenGPS
                         FileCreateContour();
                         FileCreateSections();
 
+                        SystemEventWriter("All Section Mapping Deleted");
                     }
                     else
                     {
@@ -1948,6 +2082,11 @@ namespace AgOpenGPS
             Form formX = new FormGraphXTE(this);
             formX.Show(this);
         }
+        private void eventViewerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Form form = new FormEventViewer(this);
+            form.Show(this);
+        }
         private void webcamToolStrip_Click(object sender, EventArgs e)
         {
             Form form = new FormWebCam();
@@ -1976,15 +2115,6 @@ namespace AgOpenGPS
             formC.Show(this);
         }
 
-        private void appMapToolStripMenu_Click(object sender, EventArgs e)
-        {
-            using (var form = new FormRateMap(this))
-            {
-                form.ShowDialog(this);
-            }
-            PanelUpdateRightAndBottom();
-        }
-
         #endregion
 
         #region Nav Panel
@@ -1995,7 +2125,6 @@ namespace AgOpenGPS
             if (camera.camPitch > -58) camera.camPitch = 0;
             navPanelCounter = 2;
         }
-
         private void btnTiltDn_Click(object sender, EventArgs e)
         {
             if (camera.camPitch > -59) camera.camPitch = -60;
@@ -2003,14 +2132,12 @@ namespace AgOpenGPS
             if (camera.camPitch < -70) camera.camPitch = -70;
             navPanelCounter = 2;
         }
-
         private void btnN2D_Click(object sender, EventArgs e)
         {
             camera.camFollowing = false;
             camera.camPitch = 0;
             navPanelCounter = 0;
         }
-
         private void btn2D_Click(object sender, EventArgs e)
         {
             camera.camFollowing = true;
@@ -2042,7 +2169,6 @@ namespace AgOpenGPS
                 form.Show(this);
             navPanelCounter = 0;
         }
-
         private void btnBrightnessUp_Click(object sender, EventArgs e)
         {
             if (displayBrightness.isWmiMonitor)
@@ -2082,7 +2208,6 @@ namespace AgOpenGPS
                 TimedMessageBox(2000, "No File Found", "Can't Find OGL");
             }
         }
-
         private void btnDayNightMode_Click(object sender, EventArgs e)
         {
             SwapDayNightMode();
@@ -2129,6 +2254,11 @@ namespace AgOpenGPS
             }
         }
 
+        private void lblHardwareMessage_Click(object sender, EventArgs e)
+        {
+            hardwareLineCounter = 1;
+        }
+
         #endregion
 
         #region Sim controls
@@ -2152,10 +2282,22 @@ namespace AgOpenGPS
             else sim.stepDistance *= 0.8;
             if (sim.stepDistance < -0.5) sim.stepDistance = -0.5;
         }
+
+        double lastSimGuidanceAngle = 0;
         private void timerSim_Tick(object sender, EventArgs e)
         {
             if (recPath.isDrivingRecordedPath || isBtnAutoSteerOn && (guidanceLineDistanceOff != 32000))
-                sim.DoSimTick(guidanceLineSteerAngle * 0.01);
+            {
+                if (vehicle.isInDeadZone)
+                {
+                    sim.DoSimTick((double)lastSimGuidanceAngle);
+                }
+                else
+                {
+                    lastSimGuidanceAngle = (double)guidanceLineSteerAngle * 0.01 * 0.75;
+                    sim.DoSimTick(lastSimGuidanceAngle);
+                }
+            }
             else sim.DoSimTick(sim.steerAngleScrollBar);
         }
         private void btnSimReverseDirection_Click(object sender, EventArgs e)
@@ -2163,8 +2305,12 @@ namespace AgOpenGPS
             sim.headingTrue += Math.PI;
             ABLine.isABValid = false;
             curve.isCurveValid = false;
-            curve.lastHowManyPathsAway = 98888;
-            if (isBtnAutoSteerOn) btnAutoSteer.PerformClick();
+            if (isBtnAutoSteerOn)
+            {
+                btnAutoSteer.PerformClick();
+                TimedMessageBox(2000, gStr.gsGuidanceStopped, "Sim Reverse Touched");
+                SystemEventWriter("Steer Off, Sim Reverse Activated");
+            }
         }
         private void hsbarSteerAngle_Scroll(object sender, ScrollEventArgs e)
         {
